@@ -7,11 +7,12 @@ import '../../models/dispute_model.dart';
 import '../../models/user_model.dart';
 import '../../constants/colors.dart';
 import '../../constants/strings.dart';
-import '../../widgets/dispute_card.dart';
+//import '../../widgets/dispute_card.dart';
 import '../../widgets/app_drawer.dart';
 import '../auth/login_screen.dart';
 import 'manage_users_screen.dart';
 import 'backup_screen.dart';
+import 'all_disputes_screen.dart';  // Add this import
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -25,6 +26,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   final List<Widget> _screens = [
     const _DashboardHome(),
+    const AllDisputesScreen(),  // Now this should work
     const ManageUsersScreen(),
     const BackupScreen(),
   ];
@@ -32,7 +34,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   void initState() {
     super.initState();
-    // Delay data loading until after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
@@ -76,10 +77,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
         onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: AppColors.primaryColor,
         unselectedItemColor: AppColors.textLight,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: AppStrings.dashboard,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.description),
+            label: 'Disputes',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
@@ -137,7 +143,6 @@ class _DashboardHome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome message
           Text(
             'Welcome, ${authProvider.currentUser?.fullName ?? 'Admin'}!',
             style: const TextStyle(
@@ -151,7 +156,6 @@ class _DashboardHome extends StatelessWidget {
             style: TextStyle(fontSize: 16, color: AppColors.textLight),
           ),
           const SizedBox(height: 24),
-          // Stats Grid
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -187,7 +191,6 @@ class _DashboardHome extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          // Quick Actions
           const Text(
             'Quick Actions',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -201,10 +204,21 @@ class _DashboardHome extends StatelessWidget {
             mainAxisSpacing: 16,
             children: [
               _QuickActionCard(
+                title: 'All Disputes',
+                icon: Icons.description,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AllDisputesScreen()),
+                  );
+                },
+              ),
+              _QuickActionCard(
                 title: 'Manage Users',
                 icon: Icons.person_add,
                 onTap: () {
-                  // Navigate to manage users
+                  // Navigate to manage users tab
+                  // You can use index change or navigate
                 },
               ),
               _QuickActionCard(
@@ -219,13 +233,6 @@ class _DashboardHome extends StatelessWidget {
                 icon: Icons.history,
                 onTap: () {
                   // View audit logs
-                },
-              ),
-              _QuickActionCard(
-                title: 'System Settings',
-                icon: Icons.settings,
-                onTap: () {
-                  // Open settings
                 },
               ),
             ],

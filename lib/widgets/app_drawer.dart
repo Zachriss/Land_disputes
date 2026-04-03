@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../constants/colors.dart';
 import '../models/user_model.dart';
 import '../routes/app_routes.dart';
+import '../screens/admin/admin_profile_screen.dart';
+import '../screens/admin/admin_settings_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final UserModel currentUser;
@@ -87,15 +89,27 @@ class AppDrawer extends StatelessWidget {
                   selected: currentPage == 'profile',
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navigate to profile screen
+                    if (currentUser.role == UserRole.admin) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AdminProfileScreen()),
+                      );
+                    }
                   },
                 ),
 
                 ListTile(
                   leading: const Icon(Icons.settings_outlined),
                   title: const Text('Settings'),
+                  selected: currentPage == 'settings',
                   onTap: () {
                     Navigator.pop(context);
+                    if (currentUser.role == UserRole.admin) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AdminSettingsScreen()),
+                      );
+                    }
                   },
                 ),
 
@@ -273,15 +287,19 @@ class AppDrawer extends StatelessWidget {
       ListTile(
         leading: const Icon(Icons.verified_user_outlined),
         title: const Text('Assign Roles'),
+        selected: currentPage == 'assign-roles',
         onTap: () {
           Navigator.pop(context);
+          Navigator.pushNamed(context, AppRoutes.assignRoles);
         },
       ),
       ListTile(
         leading: const Icon(Icons.folder_copy_outlined),
         title: const Text('All Disputes'),
+        selected: currentPage == 'disputes',
         onTap: () {
           Navigator.pop(context);
+          Navigator.pushNamed(context, AppRoutes.allDisputes);
         },
       ),
       ListTile(
@@ -296,15 +314,19 @@ class AppDrawer extends StatelessWidget {
       ListTile(
         leading: const Icon(Icons.history_outlined),
         title: const Text('Activity Logs'),
+        selected: currentPage == 'activity-logs',
         onTap: () {
           Navigator.pop(context);
+          Navigator.pushNamed(context, AppRoutes.activityLogs);
         },
       ),
       ListTile(
         leading: const Icon(Icons.admin_panel_settings_outlined),
         title: const Text('System Settings'),
+        selected: currentPage == 'system-settings',
         onTap: () {
           Navigator.pop(context);
+          Navigator.pushNamed(context, AppRoutes.systemSettings);
         },
       ),
     ];

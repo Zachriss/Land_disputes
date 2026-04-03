@@ -46,6 +46,7 @@ dependencies:
 
   # File handling
   file_picker: ^8.1.2
+  image_picker: ^1.0.7
 
   # Date formatting
   intl: ^0.20.1

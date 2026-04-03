@@ -14,6 +14,11 @@ import '../screens/mediator/assigned_cases_screen.dart';
 import '../screens/admin/admin_dashboard.dart';
 import '../screens/admin/manage_users_screen.dart';
 import '../screens/admin/backup_screen.dart';
+import '../screens/admin/assign_roles_screen.dart';
+import '../screens/admin/activity_logs_screen.dart';
+import '../screens/admin/system_settings_screen.dart';
+import '../screens/admin/admin_profile_screen.dart';
+import '../screens/admin/admin_settings_screen.dart';
 
 class AppRoutes {
   // Route names
@@ -38,6 +43,11 @@ class AppRoutes {
   static const String adminDashboard = '/admin/dashboard';
   static const String manageUsers = '/admin/users';
   static const String backup = '/admin/backup';
+  static const String assignRoles = '/admin/assign-roles';
+  static const String activityLogs = '/admin/activity-logs';
+  static const String systemSettings = '/admin/system-settings';
+  static const String adminProfile = '/admin/profile';
+  static const String adminSettings = '/admin/settings';
 
   // Route generator
   static Route<dynamic>? generateRoute(RouteSettings settings) {
@@ -68,6 +78,16 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const ManageUsersScreen());
       case backup:
         return MaterialPageRoute(builder: (_) => const BackupScreen());
+      case assignRoles:
+        return MaterialPageRoute(builder: (_) => const AssignRolesScreen());
+      case activityLogs:
+        return MaterialPageRoute(builder: (_) => const ActivityLogsScreen());
+      case systemSettings:
+        return MaterialPageRoute(builder: (_) => const SystemSettingsScreen());
+      case adminProfile:
+        return MaterialPageRoute(builder: (_) => const AdminProfileScreen());
+      case adminSettings:
+        return MaterialPageRoute(builder: (_) => const AdminSettingsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
