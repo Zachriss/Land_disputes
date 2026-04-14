@@ -13,6 +13,7 @@ class UserProvider extends ChangeNotifier {
   // Getters
   UserModel? get currentUser => _currentUser;
   List<UserModel> get users => _users;
+  List<UserModel> get mediators => _users.where((user) => user.role == UserRole.mediator).toList();
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -54,10 +55,17 @@ class UserProvider extends ChangeNotifier {
     try {
       _users = await _userService.getUsersByRole(role);
       _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
+      notifyListeners();
     }
+  }
+
+  // Load mediators only
+  Future<void> loadMediators() async {
+    await loadUsersByRole(UserRole.mediator);
   }
 
   // Update user profile

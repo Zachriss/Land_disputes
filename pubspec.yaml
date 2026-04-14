@@ -51,6 +51,9 @@ dependencies:
   # Date formatting
   intl: ^0.20.1
 
+  # Charts & Graphs
+  fl_chart: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

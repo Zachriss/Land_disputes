@@ -16,17 +16,20 @@ class DisputeProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Load all disputes - NO notifyListeners during loading phase to avoid setState during build
+  // Load all disputes
   Future<void> loadAllDisputes() async {
     _isLoading = true;
     _errorMessage = null;
+    notifyListeners();
 
     try {
       _disputes = await _disputeService.getAllDisputes();
       _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
+      notifyListeners();
     }
   }
 

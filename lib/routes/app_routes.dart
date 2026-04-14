@@ -9,6 +9,8 @@ import '../screens/citizen/my_cases_screen.dart';
 import '../screens/officer/officer_dashboard.dart';
 import '../screens/officer/all_disputes_screen.dart';
 import '../screens/officer/update_status_screen.dart';
+import '../screens/officer/assign_mediator_screen.dart';
+import '../screens/officer/reports_analytics_screen.dart';
 import '../screens/mediator/mediator_dashboard.dart';
 import '../screens/mediator/assigned_cases_screen.dart';
 import '../screens/admin/admin_dashboard.dart';
@@ -24,21 +26,23 @@ class AppRoutes {
   // Route names
   static const String login = '/login';
   static const String register = '/register';
-  
+
   // Citizen routes
   static const String citizenDashboard = '/citizen/dashboard';
   static const String reportDispute = '/citizen/report';
   static const String myCases = '/citizen/cases';
-  
+
   // Officer routes
   static const String officerDashboard = '/officer/dashboard';
   static const String allDisputes = '/officer/disputes';
   static const String updateStatus = '/officer/update';
-  
+  static const String assignMediator = '/officer/assign-mediator';
+  static const String reportsAnalytics = '/officer/reports';
+
   // Mediator routes
   static const String mediatorDashboard = '/mediator/dashboard';
   static const String assignedCases = '/mediator/cases';
-  
+
   // Admin routes
   static const String adminDashboard = '/admin/dashboard';
   static const String manageUsers = '/admin/users';
@@ -68,6 +72,10 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const AllDisputesScreen());
       case updateStatus:
         return MaterialPageRoute(builder: (_) => const UpdateStatusScreen());
+      case assignMediator:
+        return MaterialPageRoute(builder: (_) => const AssignMediatorScreen());
+      case reportsAnalytics:
+        return MaterialPageRoute(builder: (_) => const ReportsAnalyticsScreen());
       case mediatorDashboard:
         return MaterialPageRoute(builder: (_) => const MediatorDashboard());
       case assignedCases:

@@ -5,11 +5,17 @@ import '../constants/colors.dart';
 class DisputeCard extends StatelessWidget {
   final DisputeModel dispute;
   final VoidCallback onTap;
+  final VoidCallback? onAssignMediator;
+  final VoidCallback? onUpdateStatus;
+  final bool showOfficerActions;
 
   const DisputeCard({
     super.key,
     required this.dispute,
     required this.onTap,
+    this.onAssignMediator,
+    this.onUpdateStatus,
+    this.showOfficerActions = false,
   });
 
   @override
@@ -76,6 +82,36 @@ class DisputeCard extends StatelessWidget {
                     const Icon(Icons.warning_amber_rounded, color: AppColors.warningColor, size: 16),
                 ],
               ),
+
+              if (showOfficerActions) ...[
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton.icon(
+                        onPressed: onAssignMediator,
+                        icon: const Icon(Icons.person_add, size: 18),
+                        label: const Text('Assign Mediator'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.primaryColor,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: TextButton.icon(
+                        onPressed: onUpdateStatus,
+                        icon: const Icon(Icons.update, size: 18),
+                        label: const Text('Update Status'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.infoColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ]
             ],
           ),
         ),

@@ -5,6 +5,8 @@ import '../models/user_model.dart';
 import '../routes/app_routes.dart';
 import '../screens/admin/admin_profile_screen.dart';
 import '../screens/admin/admin_settings_screen.dart';
+import '../screens/officer/officer_profile_screen.dart';
+import '../screens/officer/officer_settings_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final UserModel currentUser;
@@ -94,6 +96,11 @@ class AppDrawer extends StatelessWidget {
                         context,
                         MaterialPageRoute(builder: (_) => const AdminProfileScreen()),
                       );
+                    } else if (currentUser.role == UserRole.officer) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OfficerProfileScreen()),
+                      );
                     }
                   },
                 ),
@@ -109,6 +116,11 @@ class AppDrawer extends StatelessWidget {
                         context,
                         MaterialPageRoute(builder: (_) => const AdminSettingsScreen()),
                       );
+                    } else if (currentUser.role == UserRole.officer) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const OfficerSettingsScreen()),
+                    );
                     }
                   },
                 ),
@@ -197,7 +209,8 @@ class AppDrawer extends StatelessWidget {
       ),
       ListTile(
         leading: const Icon(Icons.description_outlined),
-        title: const Text('All Disputes'),
+        title: const Text('Disputes'),
+        subtitle: const Text('View & Update'),
         selected: currentPage == 'disputes',
         onTap: () {
           Navigator.pop(context);
@@ -205,17 +218,30 @@ class AppDrawer extends StatelessWidget {
         },
       ),
       ListTile(
-        leading: const Icon(Icons.assignment_ind_outlined),
-        title: const Text('Assign Mediators'),
+        leading: const Icon(Icons.person_add_outlined),
+        title: const Text('Assign Mediator'),
+        selected: currentPage == 'assign-mediator',
         onTap: () {
           Navigator.pop(context);
+          Navigator.pushNamed(context, AppRoutes.assignMediator);
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.update_outlined),
+        title: const Text('Update Status'),
+        selected: currentPage == 'update-status',
+        onTap: () {
+          Navigator.pop(context);
+          Navigator.pushNamed(context, AppRoutes.updateStatus);
         },
       ),
       ListTile(
         leading: const Icon(Icons.bar_chart_outlined),
         title: const Text('Reports & Statistics'),
+        selected: currentPage == 'reports',
         onTap: () {
           Navigator.pop(context);
+          Navigator.pushNamed(context, AppRoutes.reportsAnalytics);
         },
       ),
     ];

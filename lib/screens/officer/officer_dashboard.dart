@@ -11,6 +11,10 @@ import '../../widgets/app_drawer.dart';
 import '../auth/login_screen.dart';
 import 'all_disputes_screen.dart';
 import 'update_status_screen.dart';
+import 'assign_mediator_screen.dart';
+import 'reports_analytics_screen.dart';
+import 'officer_profile_screen.dart';
+import 'officer_settings_screen.dart';
 
 class OfficerDashboard extends StatefulWidget {
   const OfficerDashboard({super.key});
@@ -25,7 +29,16 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
   final List<Widget> _screens = [
     const _DashboardHome(),
     const AllDisputesScreen(),
-    const UpdateStatusScreen(),
+    const ReportsAnalyticsScreen(),
+    const OfficerProfileScreen(),
+  ];
+
+  // Navigation drawer items
+  final List<Map<String, dynamic>> _drawerItems = [
+    {'icon': Icons.description, 'title': 'Disputes', 'screen': AllDisputesScreen()},
+    {'icon': Icons.person_add, 'title': 'Assign Mediator', 'screen': AssignMediatorScreen()},
+    {'icon': Icons.update, 'title': 'Update Status', 'screen': UpdateStatusScreen()},
+    {'icon': Icons.settings, 'title': 'Settings', 'screen': OfficerSettingsScreen()},
   ];
 
   @override
@@ -83,11 +96,15 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.description),
-            label: 'All Disputes',
+            label: 'Disputes',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.update),
-            label: 'Update Status',
+            icon: Icon(Icons.bar_chart),
+            label: 'Reports',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
