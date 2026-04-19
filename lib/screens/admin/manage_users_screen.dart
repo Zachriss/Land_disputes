@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
 import '../../constants/colors.dart';
-import '../../constants/strings.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -96,7 +95,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             },
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),
@@ -366,7 +365,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<UserRole>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     decoration: const InputDecoration(
                       labelText: 'Role',
                       border: OutlineInputBorder(),
@@ -551,7 +550,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<UserRole>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     decoration: const InputDecoration(
                       labelText: 'Role',
                       border: OutlineInputBorder(),

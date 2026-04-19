@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
 import '../../constants/colors.dart';
-import '../../widgets/custom_button.dart';
 
 class AssignRolesScreen extends StatefulWidget {
   const AssignRolesScreen({super.key});
@@ -90,7 +89,7 @@ class _AssignRolesScreenState extends State<AssignRolesScreen> {
                             },
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),

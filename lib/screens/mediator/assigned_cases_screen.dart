@@ -51,7 +51,7 @@ class _AssignedCasesScreenState extends State<AssignedCasesScreen> {
                         },
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

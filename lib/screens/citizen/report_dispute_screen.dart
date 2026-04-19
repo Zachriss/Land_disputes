@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/dispute_provider.dart';
 import '../../models/dispute_model.dart';
 import '../../constants/colors.dart';
-import '../../constants/strings.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
@@ -131,7 +130,7 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<DisputeType>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Dispute Type',
                   border: OutlineInputBorder(),
@@ -150,7 +149,7 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<DisputePriority>(
-                value: _selectedPriority,
+                initialValue: _selectedPriority,
                 decoration: const InputDecoration(
                   labelText: 'Priority',
                   border: OutlineInputBorder(),

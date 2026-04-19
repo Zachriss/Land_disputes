@@ -1,4 +1,5 @@
 /// Dispute service for managing disputes in Firestore
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dispute_model.dart';
@@ -224,7 +225,7 @@ class DisputeService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+        return DisputeModel.fromJson(doc.id, doc.data());
       }).toList();
     });
   }

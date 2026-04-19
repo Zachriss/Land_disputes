@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/dispute_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/dispute_model.dart';
-import '../../models/user_model.dart';
 import '../../constants/colors.dart';
 import '../../constants/strings.dart';
 //import '../../widgets/dispute_card.dart';

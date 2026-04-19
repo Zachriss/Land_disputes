@@ -1,4 +1,5 @@
 /// App text, labels, and string constants
+library;
 
 class AppStrings {
   // App info

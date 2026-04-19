@@ -4,7 +4,6 @@ import '../../providers/dispute_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/dispute_model.dart';
 import '../../models/user_model.dart';
-import '../../widgets/dispute_card.dart';
 import '../../constants/colors.dart';
 
 class AssignMediatorScreen extends StatefulWidget {

@@ -142,7 +142,7 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
                             checkmarkColor: _getStatusColor(status),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),
@@ -178,9 +178,9 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
                 // Apply search filter - adjust these fields based on your DisputeModel
                 if (_searchQuery.isNotEmpty) {
                   disputes = disputes.where((d) =>
-                      (d.title?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                      (d.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                      (d.location?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                      (d.title.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                      (d.description.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                      (d.location.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
                       (d.id?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)
                   ).toList();
                 }
@@ -243,9 +243,9 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showFilterDialog(),
-        child: const Icon(Icons.filter_list),
         backgroundColor: AppColors.primaryColor,
         tooltip: 'Advanced Filters',
+        child: const Icon(Icons.filter_list),
       ),
     );
   }
@@ -286,8 +286,7 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
               const SizedBox(height: 8),
               _buildDetailRow('Description', dispute.description ?? 'No description'),
               const SizedBox(height: 8),
-              if (dispute.location != null)
-                _buildDetailRow('Location', dispute.location!),
+              _buildDetailRow('Location', dispute.location),
               const SizedBox(height: 8),
               _buildDetailRow('Created', _formatDate(dispute.createdAt)),
             ],
@@ -472,31 +471,29 @@ class _DisputeListItem extends StatelessWidget {
               const SizedBox(height: 12),
               
               // Description
-              if (dispute.description != null)
-                Text(
-                  dispute.description!,
-                  style: const TextStyle(fontSize: 14),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                dispute.description,
+                style: const TextStyle(fontSize: 14),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 8),
               
               // Location if available
-              if (dispute.location != null)
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 16, color: AppColors.textLight),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        dispute.location!,
-                        style: const TextStyle(fontSize: 14),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              Row(
+                children: [
+                  const Icon(Icons.location_on, size: 16, color: AppColors.textLight),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      dispute.location,
+                      style: const TextStyle(fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               
               // Date

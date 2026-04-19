@@ -186,7 +186,7 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
                             },
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),

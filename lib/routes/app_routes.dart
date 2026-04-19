@@ -1,4 +1,5 @@
 /// Named routes and route generator for the app
+library;
 
 import 'package:flutter/material.dart';
 import '../screens/auth/login_screen.dart';

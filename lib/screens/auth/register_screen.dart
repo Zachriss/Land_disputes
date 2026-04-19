@@ -216,7 +216,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Role
                 DropdownButtonFormField<UserRole>(
-                  value: _selectedRole,
+                  initialValue: _selectedRole,
                   decoration: const InputDecoration(
                     labelText: AppStrings.role,
                     border: OutlineInputBorder(),

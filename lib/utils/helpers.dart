@@ -1,4 +1,5 @@
 /// Helper functions for the app
+library;
 
 import 'package:intl/intl.dart';
 
