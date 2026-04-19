@@ -3,13 +3,10 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-
-    // Apply the Google Services plugin to enable Firebase
-    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.thomas.land_disputes" // Your app namespace
+    namespace = "com.example.land_disputes"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -23,7 +20,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.thomas.land_disputes" // MUST match Firebase package name
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId = "com.example.land_disputes"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -32,21 +32,11 @@ android {
 
     buildTypes {
         release {
-            // Signing with debug keys for now
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-}
-
-// Add Firebase dependencies here
-dependencies {
-    // Firebase BoM to manage compatible versions
-    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
-
-    // Firebase libraries you need
-    implementation("com.google.firebase:firebase-auth-ktx")       // For Authentication
-    implementation("com.google.firebase:firebase-firestore-ktx")  // For Firestore Database
-    implementation("com.google.firebase:firebase-storage-ktx")    // For File Storage
 }
 
 flutter {

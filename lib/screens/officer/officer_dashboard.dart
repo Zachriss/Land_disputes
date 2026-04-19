@@ -29,16 +29,32 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
   final List<Widget> _screens = [
     const _DashboardHome(),
     const AllDisputesScreen(),
+    const AssignMediatorScreen(),
     const ReportsAnalyticsScreen(),
-    const OfficerProfileScreen(),
   ];
 
   // Navigation drawer items
   final List<Map<String, dynamic>> _drawerItems = [
-    {'icon': Icons.description, 'title': 'Disputes', 'screen': AllDisputesScreen()},
-    {'icon': Icons.person_add, 'title': 'Assign Mediator', 'screen': AssignMediatorScreen()},
-    {'icon': Icons.update, 'title': 'Update Status', 'screen': UpdateStatusScreen()},
-    {'icon': Icons.settings, 'title': 'Settings', 'screen': OfficerSettingsScreen()},
+    {
+      'icon': Icons.description,
+      'title': 'Disputes',
+      'screen': AllDisputesScreen(),
+    },
+    {
+      'icon': Icons.person_add,
+      'title': 'Assign Mediator',
+      'screen': AssignMediatorScreen(),
+    },
+    {
+      'icon': Icons.update,
+      'title': 'Update Status',
+      'screen': UpdateStatusScreen(),
+    },
+    {
+      'icon': Icons.settings,
+      'title': 'Settings',
+      'screen': OfficerSettingsScreen(),
+    },
   ];
 
   @override
@@ -52,7 +68,10 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
 
   void _loadDisputes() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final disputeProvider = Provider.of<DisputeProvider>(context, listen: false);
+    final disputeProvider = Provider.of<DisputeProvider>(
+      context,
+      listen: false,
+    );
     if (authProvider.userUid != null) {
       disputeProvider.loadDisputesByOfficer(authProvider.userUid!);
     }
@@ -89,9 +108,10 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
         onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: AppColors.primaryColor,
         unselectedItemColor: AppColors.textLight,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
+            icon: Icon(Icons.home),
             label: AppStrings.dashboard,
           ),
           BottomNavigationBarItem(
@@ -99,12 +119,12 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
             label: 'Disputes',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Reports',
+            icon: Icon(Icons.person_add),
+            label: 'Assign Mediator',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.bar_chart),
+            label: 'Reports',
           ),
         ],
       ),
@@ -156,10 +176,7 @@ class _DashboardHome extends StatelessWidget {
           // Welcome message
           Text(
             'Welcome, ${authProvider.currentUser?.fullName ?? 'Officer'}!',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -175,7 +192,7 @@ class _DashboardHome extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.5,
+            childAspectRatio: 1.7,
             children: [
               _StatCard(
                 title: 'Total Cases',
@@ -185,19 +202,25 @@ class _DashboardHome extends StatelessWidget {
               ),
               _StatCard(
                 title: 'Pending',
-                count: disputeProvider.disputes.where((d) => d.status == DisputeStatus.pending).length,
+                count: disputeProvider.disputes
+                    .where((d) => d.status == DisputeStatus.pending)
+                    .length,
                 color: AppColors.warningColor,
                 icon: Icons.hourglass_top,
               ),
               _StatCard(
                 title: 'In Progress',
-                count: disputeProvider.disputes.where((d) => d.status == DisputeStatus.inProgress).length,
+                count: disputeProvider.disputes
+                    .where((d) => d.status == DisputeStatus.inProgress)
+                    .length,
                 color: AppColors.infoColor,
                 icon: Icons.pending,
               ),
               _StatCard(
                 title: 'Resolved',
-                count: disputeProvider.disputes.where((d) => d.status == DisputeStatus.resolved).length,
+                count: disputeProvider.disputes
+                    .where((d) => d.status == DisputeStatus.resolved)
+                    .length,
                 color: AppColors.successColor,
                 icon: Icons.check_circle,
               ),
@@ -208,10 +231,7 @@ class _DashboardHome extends StatelessWidget {
           // Recent Assigned Disputes
           const Text(
             'Recent Assigned Disputes',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
 
@@ -230,7 +250,9 @@ class _DashboardHome extends StatelessWidget {
               return ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: provider.disputes.length > 5 ? 5 : provider.disputes.length,
+                itemCount: provider.disputes.length > 5
+                    ? 5
+                    : provider.disputes.length,
                 itemBuilder: (context, index) {
                   return DisputeCard(
                     dispute: provider.disputes[index],
@@ -266,26 +288,27 @@ class _StatCard extends StatelessWidget {
     return Card(
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 4),
             Text(
               count.toString(),
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textLight,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.textLight),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

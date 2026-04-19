@@ -6,7 +6,7 @@ import '../../models/dispute_model.dart';
 import '../../models/user_model.dart';
 import '../../widgets/dispute_card.dart';
 import '../../constants/colors.dart';
-import 'update_status_screen.dart';
+import 'dispute_details_screen.dart';
 
 class AllDisputesScreen extends StatefulWidget {
   const AllDisputesScreen({super.key});
@@ -43,52 +43,55 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Assign Mediator'),
-        content: Consumer<UserProvider>(
-          builder: (context, provider, child) {
-            if (provider.isLoading) {
-              return const SizedBox(
-                height: 150,
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            if (provider.mediators.isEmpty) {
-              return const SizedBox(
-                height: 150,
-                child: Center(child: Text('No mediators available')),
-              );
-            }
-
-            return ListView.builder(
-              shrinkWrap: true,
-              itemCount: provider.mediators.length,
-              itemBuilder: (context, index) {
-                final mediator = provider.mediators[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    title: Text(mediator.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(mediator.email),
-                    leading: CircleAvatar(
-                      backgroundColor: AppColors.primaryColor.withOpacity(0.1),
-                      child: Icon(Icons.person, color: AppColors.primaryColor),
-                    ),
-                    trailing: dispute.assignedMediatorId == mediator.id
-                        ? Chip(
-                            label: const Text('Assigned'),
-                            backgroundColor: AppColors.successColor.withOpacity(0.1),
-                            side: BorderSide(color: AppColors.successColor),
-                            labelStyle: TextStyle(color: AppColors.successColor, fontSize: 12),
-                          )
-                        : null,
-                    onTap: dispute.assignedMediatorId == mediator.id
-                        ? null
-                        : () => _assignMediatorToDispute(dispute, mediator),
-                  ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Consumer<UserProvider>(
+            builder: (context, provider, child) {
+              if (provider.isLoading) {
+                return const SizedBox(
+                  height: 150,
+                  child: Center(child: CircularProgressIndicator()),
                 );
-              },
-            );
-          },
+              }
+
+              if (provider.mediators.isEmpty) {
+                return const SizedBox(
+                  height: 150,
+                  child: Center(child: Text('No mediators available')),
+                );
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: provider.mediators.length,
+                itemBuilder: (context, index) {
+                  final mediator = provider.mediators[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(mediator.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(mediator.email),
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.primaryColor.withOpacity(0.1),
+                        child: Icon(Icons.person, color: AppColors.primaryColor),
+                      ),
+                      trailing: dispute.assignedMediatorId == mediator.id
+                          ? Chip(
+                              label: const Text('Assigned'),
+                              backgroundColor: AppColors.successColor.withOpacity(0.1),
+                              side: BorderSide(color: AppColors.successColor),
+                              labelStyle: TextStyle(color: AppColors.successColor, fontSize: 12),
+                            )
+                          : null,
+                      onTap: dispute.assignedMediatorId == mediator.id
+                          ? null
+                          : () => _assignMediatorToDispute(dispute, mediator),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ),
         actions: [
           TextButton(
@@ -134,6 +137,73 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
     }
   }
 
+  Future<void> _showStatusUpdateDialog(DisputeModel dispute) async {
+    DisputeStatus? selectedStatus = dispute.status;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Status'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: DisputeStatus.values.map((status) {
+              return RadioListTile<DisputeStatus>(
+                title: Text(_statusToLabel(status)),
+                value: status,
+                groupValue: selectedStatus,
+                onChanged: (value) {
+                  setState(() {
+                    selectedStatus = value;
+                  });
+                  Navigator.pop(context, value);
+                },
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedStatus != null && selectedStatus != dispute.status) {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final disputeProvider = Provider.of<DisputeProvider>(context, listen: false);
+      bool success = await disputeProvider.updateDisputeStatus(dispute.id!, selectedStatus!);
+
+      if (!mounted) return;
+      Navigator.pop(context); // Hide loading
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Status updated successfully'),
+            backgroundColor: AppColors.successColor,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(disputeProvider.errorMessage ?? 'Failed to update status'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,132 +214,132 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
       body: RefreshIndicator(
         onRefresh: _refreshDisputes,
         child: Column(
-        children: [
-          // Filter Bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Search disputes...',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.search),
+          children: [
+            // Filter Bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Search disputes...',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) {
+                      setState(() => _searchQuery = value);
+                    },
                   ),
-                  onChanged: (value) {
-                    setState(() => _searchQuery = value);
-                  },
-                ),
-                const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('All'),
-                        selected: _filterStatus == null,
-                        onSelected: (selected) {
-                          setState(() => _filterStatus = null);
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      ...DisputeStatus.values.map((status) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(_statusToLabel(status)),
-                            selected: _filterStatus == status,
-                            onSelected: (selected) {
-                              setState(() {
-                                _filterStatus = selected ? status : null;
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Disputes List
-          Expanded(
-            child: Consumer<DisputeProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (provider.errorMessage != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  const SizedBox(height: 16),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
                       children: [
-                        Text(
-                          'Error loading disputes',
-                          style: TextStyle(color: Colors.red[700]),
+                        FilterChip(
+                          label: const Text('All'),
+                          selected: _filterStatus == null,
+                          onSelected: (selected) {
+                            setState(() => _filterStatus = null);
+                          },
                         ),
-                        const SizedBox(height: 8),
-                        Text(provider.errorMessage!),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _refreshDisputes,
-                          child: const Text('Try Again'),
-                        ),
+                        const SizedBox(width: 8),
+                        ...DisputeStatus.values.map((status) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(_statusToLabel(status)),
+                              selected: _filterStatus == status,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _filterStatus = selected ? status : null;
+                                });
+                              },
+                            ),
+                          );
+                        }).toList(),
                       ],
                     ),
-                  );
-                }
+                  ),
+                ],
+              ),
+            ),
+            // Disputes List
+            Expanded(
+              child: Consumer<DisputeProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                var filteredDisputes = provider.disputes;
-
-                if (_filterStatus != null) {
-                  filteredDisputes = filteredDisputes
-                      .where((d) => d.status == _filterStatus)
-                      .toList();
-                }
-
-                if (_searchQuery.isNotEmpty) {
-                  filteredDisputes = filteredDisputes
-                      .where((d) =>
-                          d.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                          d.description.toLowerCase().contains(_searchQuery.toLowerCase()))
-                      .toList();
-                }
-
-                if (filteredDisputes.isEmpty) {
-                  return const Center(
-                    child: Text('No disputes found'),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: filteredDisputes.length,
-                  itemBuilder: (context, index) {
-                return DisputeCard(
-                  dispute: filteredDisputes[index],
-                  showOfficerActions: true,
-                  onTap: () {
-                    // Navigate to dispute details
-                  },
-                  onAssignMediator: () => _showMediatorSelectionDialog(filteredDisputes[index]),
-                  onUpdateStatus: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const UpdateStatusScreen(),
+                  if (provider.errorMessage != null) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Error loading disputes',
+                            style: TextStyle(color: Colors.red[700]),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(provider.errorMessage!),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _refreshDisputes,
+                            child: const Text('Try Again'),
+                          ),
+                        ],
                       ),
                     );
-                  },
-                );
-                  },
-                );
-              },
+                  }
+
+                  var filteredDisputes = provider.disputes;
+
+                  if (_filterStatus != null) {
+                    filteredDisputes = filteredDisputes
+                        .where((d) => d.status == _filterStatus)
+                        .toList();
+                  }
+
+                  if (_searchQuery.isNotEmpty) {
+                    filteredDisputes = filteredDisputes
+                        .where((d) =>
+                            d.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                            d.description.toLowerCase().contains(_searchQuery.toLowerCase()))
+                        .toList();
+                  }
+
+                  if (filteredDisputes.isEmpty) {
+                    return const Center(
+                      child: Text('No disputes found'),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredDisputes.length,
+                    itemBuilder: (context, index) {
+                      return DisputeCard(
+                        dispute: filteredDisputes[index],
+                        showOfficerActions: true,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DisputeDetailsScreen(
+                                dispute: filteredDisputes[index],
+                              ),
+                            ),
+                          );
+                        },
+                        onAssignMediator: () => _showMediatorSelectionDialog(filteredDisputes[index]),
+                        onUpdateStatus: () => _showStatusUpdateDialog(filteredDisputes[index]),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );

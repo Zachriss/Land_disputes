@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dispute_model.dart';
 import '../services/dispute_service.dart';
 
@@ -53,13 +54,16 @@ class DisputeProvider extends ChangeNotifier {
   Future<void> loadDisputesByUser(String userId) async {
     _isLoading = true;
     _errorMessage = null;
+    notifyListeners();
 
     try {
       _disputes = await _disputeService.getDisputesByUser(userId);
       _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -117,6 +121,40 @@ class DisputeProvider extends ChangeNotifier {
       _errorMessage = e.toString();
       _isLoading = false;
       notifyListeners();
+      return false;
+    }
+  }
+
+  // Create dispute and return ID for document upload
+  Future<String?> createDisputeGetId(DisputeModel dispute) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      String? disputeId = await _disputeService.submitDispute(dispute);
+      _isLoading = false;
+      notifyListeners();
+      return disputeId;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
+  // Update dispute with document urls
+  Future<bool> updateDisputeDocuments(String disputeId, List<String> documentUrls) async {
+    try {
+      await _disputeService.updateDispute(disputeId, {
+        'documentIds': documentUrls,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      await loadAllDisputes(); // Refresh disputes
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
       return false;
     }
   }
@@ -182,7 +220,7 @@ class DisputeProvider extends ChangeNotifier {
   }
 
   // Assign mediator to dispute
-  Future<bool> assignMediator(String disputeId, String mediatorId) async {
+  Future<bool> assignMediator(String disputeId, String? mediatorId) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();

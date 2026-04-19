@@ -6,12 +6,18 @@ class DocumentCard extends StatelessWidget {
   final DocumentModel document;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onVerifyValid;
+  final VoidCallback? onVerifyInvalid;
+  final bool showVerificationButtons;
 
   const DocumentCard({
     super.key,
     required this.document,
     this.onTap,
     this.onDelete,
+    this.onVerifyValid,
+    this.onVerifyInvalid,
+    this.showVerificationButtons = false,
   });
 
   @override
@@ -46,6 +52,18 @@ class DocumentCard extends StatelessWidget {
           children: [
             if (document.isVerified)
               const Icon(Icons.verified, color: AppColors.successColor, size: 20),
+            if (showVerificationButtons && !document.isVerified) ...[
+              IconButton(
+                icon: const Icon(Icons.check_circle, color: AppColors.successColor),
+                onPressed: onVerifyValid,
+                tooltip: 'Mark as Valid',
+              ),
+              IconButton(
+                icon: const Icon(Icons.cancel, color: AppColors.errorColor),
+                onPressed: onVerifyInvalid,
+                tooltip: 'Mark as Invalid',
+              ),
+            ],
             if (onDelete != null)
               IconButton(
                 icon: const Icon(Icons.delete, color: AppColors.errorColor),

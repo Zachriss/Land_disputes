@@ -1,9 +1,3 @@
-// Root-level build.gradle.kts
-plugins {
-    // Declare Google Services plugin version (do not apply here)
-    id("com.google.gms.google-services") version "4.4.4" apply false
-}
-
 allprojects {
     repositories {
         google()
@@ -21,7 +15,6 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
-
 subprojects {
     project.evaluationDependsOn(":app")
 }

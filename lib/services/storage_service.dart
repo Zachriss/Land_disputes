@@ -1,11 +1,15 @@
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
-import '../constants/firebase_consts.dart';
+import 'package:http/http.dart' as http;
 
 class StorageService {
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final String cloudName = "dkqwbh8nq";
+  final String uploadPreset = "unsigned_upload"; // create this in Cloudinary
 
+  /// =========================
+  /// GENERIC UPLOAD FILE
+  /// =========================
   Future<String?> uploadFile({
     required String path,
     required File file,
@@ -13,110 +17,77 @@ class StorageService {
     Function(double)? onProgress,
   }) async {
     try {
-      Reference ref = _storage.ref().child(path);
-      
-      SettableMetadata? settableMetadata;
-      if (metadata != null) {
-        settableMetadata = SettableMetadata(
-          contentType: metadata['contentType'],
-          customMetadata: metadata,
-        );
+      final url = Uri.parse(
+        "https://api.cloudinary.com/v1_1/$cloudName/image/upload",
+      );
+
+      var request = http.MultipartRequest("POST", url);
+
+      request.fields['upload_preset'] = uploadPreset;
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        final res = await response.stream.bytesToString();
+        final data = json.decode(res);
+
+        return data['secure_url']; // 🔥 THIS IS YOUR IMAGE URL
+      } else {
+        print("UPLOAD FAILED: ${response.statusCode}");
+        print("Response body: ${await response.stream.bytesToString()}");
+        return null;
       }
-      
-      UploadTask uploadTask = ref.putFile(file, settableMetadata);
-      
-      if (onProgress != null) {
-        uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-          double progress = snapshot.bytesTransferred / snapshot.totalBytes;
-          onProgress(progress);
-        });
-      }
-      
-      TaskSnapshot snapshot = await uploadTask;
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
     } catch (e) {
-      throw 'Failed to upload file: $e';
+      print("CLOUDINARY ERROR: $e");
+      return null;
     }
   }
 
+  /// =========================
+  /// UPLOAD DISPUTE DOCUMENT
+  /// =========================
   Future<String?> uploadDocumentForDispute({
     required String disputeId,
     required PlatformFile file,
     Function(double)? onProgress,
   }) async {
-    String path = '${FirebaseConsts.documentsFolder}/$disputeId/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-    File localFile = File(file.path!);
-    
-    return uploadFile(
-      path: path,
-      file: localFile,
-      metadata: {
-        'contentType': file.extension != null ? _getContentType(file.extension!) : 'application/octet-stream',
-        'originalName': file.name,
-        'disputeId': disputeId,
-      },
-      onProgress: onProgress,
-    );
-  }
-
-  Future<void> deleteFile(String filePath) async {
     try {
-      Reference ref = _storage.ref().child(filePath);
-      await ref.delete();
-    } catch (e) {
-      throw 'Failed to delete file: $e';
-    }
-  }
+      if (file.path == null) throw "Invalid file path";
 
-  Future<String?> getDownloadUrl(String path) async {
-    try {
-      Reference ref = _storage.ref().child(path);
-      return await ref.getDownloadURL();
-    } catch (e) {
-      throw 'Failed to get download URL: $e';
-    }
-  }
+      final fileName =
+          "${DateTime.now().millisecondsSinceEpoch}_${file.name}";
 
-  Future<String?> uploadProfilePicture({
-    required String userId,
-    required File file,
-  }) async {
-    String path = '${FirebaseConsts.profilePictureFolder}/$userId/profile.jpg';
-    return uploadFile(path: path, file: file);
-  }
+      final localFile = File(file.path!);
 
-  Future<PlatformFile?> pickFile({
-    List<String>? allowedExtensions,
-    int maxSizeInBytes = 10 * 1024 * 1024,
-  }) async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: allowedExtensions != null ? FileType.custom : FileType.any,
-        allowedExtensions: allowedExtensions,
+      return await uploadFile(
+        path: "documents/$disputeId/$fileName",
+        file: localFile,
+        metadata: {
+          'contentType': _getContentType(file.extension),
+          'originalName': file.name,
+          'disputeId': disputeId,
+        },
+        onProgress: onProgress,
       );
-      
-      if (result != null) {
-        PlatformFile file = result.files.first;
-        if (file.size > maxSizeInBytes) {
-          throw 'File size exceeds maximum allowed size (${maxSizeInBytes ~/ (1024 * 1024)}MB)';
-        }
-        return file;
-      }
-      return null;
     } catch (e) {
-      throw 'Failed to pick file: $e';
+      print("DOCUMENT UPLOAD ERROR: $e");
+      return null;
     }
   }
 
+  /// =========================
+  /// MULTIPLE FILE UPLOAD
+  /// =========================
   Future<List<String>> uploadMultipleFiles({
     required String disputeId,
     required List<PlatformFile> files,
-    Function(double, int)? onProgress,
+    Function(double progress, int index)? onProgress,
   }) async {
     List<String> urls = [];
+
     for (int i = 0; i < files.length; i++) {
-      String? url = await uploadDocumentForDispute(
+      final url = await uploadDocumentForDispute(
         disputeId: disputeId,
         file: files[i],
         onProgress: (progress) {
@@ -125,21 +96,95 @@ class StorageService {
           }
         },
       );
+
       if (url != null) {
         urls.add(url);
       }
     }
+
     return urls;
   }
 
-  String _getContentType(String extension) {
-    switch (extension.toLowerCase()) {
-      case 'pdf': return 'application/pdf';
-      case 'jpg': case 'jpeg': return 'image/jpeg';
-      case 'png': return 'image/png';
-      case 'doc': return 'application/msword';
-      case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      default: return 'application/octet-stream';
+  /// =========================
+  /// PROFILE IMAGE UPLOAD
+  /// =========================
+  Future<String?> uploadProfilePicture({
+    required String userId,
+    required File file,
+  }) async {
+    return await uploadFile(
+      path: "profile_pictures/$userId/profile.jpg",
+      file: file,
+      metadata: {
+        'contentType': 'image/jpeg',
+        'userId': userId,
+      },
+    );
+  }
+
+  /// =========================
+  /// DELETE FILE
+  /// =========================
+  Future<void> deleteFile(String path) async {
+    try {
+      // Cloudinary doesn't support direct deletion via API
+      // You would need to use Cloudinary's admin API for deletion
+      print("DELETE FILE: Cloudinary doesn't support direct deletion via API");
+    } catch (e) {
+      print("DELETE ERROR: $e");
+    }
+  }
+
+  /// =========================
+  /// PICK FILE
+  /// =========================
+  Future<PlatformFile?> pickFile({
+    List<String>? allowedExtensions,
+    int maxSizeInBytes = 10 * 1024 * 1024,
+  }) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: allowedExtensions != null ? FileType.custom : FileType.any,
+        allowedExtensions: allowedExtensions,
+      );
+
+      if (result != null) {
+        final file = result.files.first;
+
+        if (file.size > maxSizeInBytes) {
+          throw "File too large (Max ${maxSizeInBytes ~/ (1024 * 1024)}MB)";
+        }
+
+        return file;
+      }
+
+      return null;
+    } catch (e) {
+      print("FILE PICK ERROR: $e");
+      return null;
+    }
+  }
+
+  /// =========================
+  /// CONTENT TYPE HELPER
+  /// =========================
+  String _getContentType(String? ext) {
+    if (ext == null) return 'application/octet-stream';
+
+    switch (ext.toLowerCase()) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return 'application/octet-stream';
     }
   }
 }

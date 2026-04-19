@@ -2,10 +2,13 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dispute_model.dart';
+import '../models/user_model.dart';
 import '../constants/firebase_consts.dart';
+import 'notification_service.dart';
 
 class DisputeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
   // Get dispute by ID
   Future<DisputeModel?> getDisputeById(String disputeId) async {
@@ -169,6 +172,25 @@ class DisputeService {
           .collection(FirebaseConsts.disputesCollection)
           .doc(disputeId)
           .update(data);
+
+      // Get updated dispute to send notifications
+      final disputeDoc = await _firestore
+          .collection(FirebaseConsts.disputesCollection)
+          .doc(disputeId)
+          .get();
+      
+      if (disputeDoc.exists) {
+        final dispute = DisputeModel.fromJson(disputeId, disputeDoc.data() as Map<String, dynamic>);
+        final statusString = _statusToString(status);
+        
+        // Send status update notification
+        await _notificationService.sendDisputeStatusUpdateNotification(dispute, statusString);
+        
+        // Send resolved notification if applicable
+        if (status == DisputeStatus.resolved) {
+          await _notificationService.sendDisputeResolvedNotification(dispute);
+        }
+      }
     } catch (e) {
       throw 'Failed to update dispute status: $e';
     }
@@ -190,7 +212,7 @@ class DisputeService {
   }
 
   // Assign mediator to dispute
-  Future<void> assignMediator(String disputeId, String mediatorId) async {
+  Future<void> assignMediator(String disputeId, String? mediatorId) async {
     try {
       await _firestore
           .collection(FirebaseConsts.disputesCollection)

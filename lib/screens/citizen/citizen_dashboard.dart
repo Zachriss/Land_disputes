@@ -11,6 +11,8 @@ import '../../widgets/app_drawer.dart';
 import '../auth/login_screen.dart';
 import 'report_dispute_screen.dart';
 import 'my_cases_screen.dart';
+import 'notifications_screen.dart';
+import 'citizen_profile_screen.dart';
 
 class CitizenDashboard extends StatefulWidget {
   const CitizenDashboard({super.key});
@@ -25,6 +27,8 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
   final List<Widget> _screens = [
     const _DashboardHome(),
     const MyCasesScreen(),
+    const NotificationsScreen(),
+    const CitizenProfileScreen(),
   ];
 
   @override
@@ -64,39 +68,54 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ReportDisputeScreen(),
-                ),
-              );
-            },
-            tooltip: 'Report Dispute',
-          ),
-          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _handleLogout(context),
           ),
         ],
       ),
       body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: AppColors.primaryColor,
-        unselectedItemColor: AppColors.textLight,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: AppStrings.dashboard,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.folder),
-            label: AppStrings.myCases,
-          ),
-        ],
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ReportDisputeScreen(),
+                  ),
+                );
+              },
+              backgroundColor: AppColors.primaryColor,
+              elevation: 6,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: BottomAppBar(
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          selectedItemColor: AppColors.primaryColor,
+          unselectedItemColor: AppColors.textLight,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: AppStrings.dashboard,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.folder),
+              label: AppStrings.myCases,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications),
+              label: 'Notifications',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -110,19 +129,18 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(AppStrings.cancel),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
-              await Provider.of<AuthProvider>(context, listen: false).logout();
-              if (!mounted) return;
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              await authProvider.logout();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+              }
             },
-            child: const Text(AppStrings.logout),
+            child: const Text('Logout'),
           ),
         ],
       ),
@@ -154,13 +172,13 @@ class _DashboardHome extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Stats Grid
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.5,
+           GridView.count(
+             shrinkWrap: true,
+             physics: const NeverScrollableScrollPhysics(),
+             crossAxisCount: 2,
+             crossAxisSpacing: 16,
+             mainAxisSpacing: 16,
+             childAspectRatio: 1.75,
             children: [
               _StatCard(
                 title: 'Pending',
@@ -250,29 +268,35 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color,
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 6),
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textLight,
+              const SizedBox(height: 4),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textLight,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
