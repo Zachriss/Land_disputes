@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/dispute_provider.dart';
 import '../../models/dispute_model.dart';
-import '../../models/user_model.dart';
 import '../../constants/colors.dart';
 import '../../constants/strings.dart';
 import '../../widgets/dispute_card.dart';
@@ -13,8 +12,9 @@ import 'all_disputes_screen.dart';
 import 'update_status_screen.dart';
 import 'assign_mediator_screen.dart';
 import 'reports_analytics_screen.dart';
-import 'officer_profile_screen.dart';
 import 'officer_settings_screen.dart';
+import 'officer_profile_screen.dart';
+import '../citizen/notifications_screen.dart';
 
 class OfficerDashboard extends StatefulWidget {
   const OfficerDashboard({super.key});
@@ -30,6 +30,7 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
     const _DashboardHome(),
     const AllDisputesScreen(),
     const AssignMediatorScreen(),
+    const UpdateStatusScreen(),
     const ReportsAnalyticsScreen(),
   ];
 
@@ -87,7 +88,7 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
           ? AppDrawer(currentUser: currentUser, currentPage: 'dashboard')
           : null,
       appBar: AppBar(
-        title: const Text('Officer Dashboard'),
+        title: const Text('Officer'),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -97,8 +98,64 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _handleLogout(context),
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OfficerSettingsScreen(),
+                ),
+              );
+            },
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OfficerProfileScreen(),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.white,
+                child:
+                    currentUser?.profilePictureUrl != null &&
+                        currentUser!.profilePictureUrl!.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          currentUser!.profilePictureUrl!,
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Text(
+                        currentUser?.fullName.isNotEmpty == true
+                            ? currentUser!.fullName[0].toUpperCase()
+                            : 'O',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+              ),
+            ),
           ),
         ],
       ),
@@ -112,7 +169,7 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: AppStrings.dashboard,
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.description),
@@ -121,6 +178,10 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person_add),
             label: 'Assign Mediator',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.update),
+            label: 'Update Status',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
@@ -173,19 +234,14 @@ class _DashboardHome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome message
-          Text(
-            'Welcome, ${authProvider.currentUser?.fullName ?? 'Officer'}!',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
           const Text(
-            'Land Officer - Dispute Management',
-            style: TextStyle(fontSize: 16, color: AppColors.textLight),
+            'Land Officer Overview',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 24),
-
-          // Stats Grid
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),

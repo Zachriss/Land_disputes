@@ -30,20 +30,34 @@ class _ActivityLogsScreenState extends State<ActivityLogsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Activity Logs'),
-        backgroundColor: AppColors.primaryColor,
+        toolbarHeight: kToolbarHeight,
       ),
       body: Column(
         children: [
+          // Page Title
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+            child: const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Activity Logs',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'System Activity',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

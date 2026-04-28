@@ -6,7 +6,6 @@ import '../../providers/dispute_provider.dart';
 import '../../models/dispute_model.dart';
 import '../../services/storage_service.dart';
 import '../../constants/colors.dart';
-import '../../constants/strings.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
@@ -26,7 +25,7 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
   
   DisputeType _selectedType = DisputeType.other;
   DisputePriority _selectedPriority = DisputePriority.medium;
-  List<PlatformFile> _selectedDocuments = [];
+  final List<PlatformFile> _selectedDocuments = [];
   final StorageService _storageService = StorageService();
   bool _isUploading = false;
   double _uploadProgress = 0.0;
@@ -71,17 +70,6 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validate that at least one document is attached
-    if (_selectedDocuments.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please attach at least one supporting document'),
-          backgroundColor: AppColors.errorColor,
-        ),
-      );
-      return;
-    }
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final disputeProvider = Provider.of<DisputeProvider>(context, listen: false);
 
@@ -118,67 +106,64 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
       return;
     }
 
-    setState(() {
-      _isUploading = true;
-    });
+    List<String> documentUrls = [];
 
-    // Upload all documents
-    List<String> documentUrls = await _storageService.uploadMultipleFiles(
-      disputeId: disputeId,
-      files: _selectedDocuments,
-      onProgress: (progress, index) {
-        setState(() {
-          _uploadProgress = (index + progress) / _selectedDocuments.length;
-        });
-      },
-    );
+    // ✅ ONLY upload documents if files exist
+    if (_selectedDocuments.isNotEmpty) {
+      setState(() {
+        _isUploading = true;
+      });
 
-    // Update dispute with document urls
-    dispute = dispute.copyWith(
-      id: disputeId,
-      documentIds: documentUrls,
-    );
+      // Upload all documents
+      documentUrls = await _storageService.uploadMultipleFiles(
+        disputeId: disputeId,
+        files: _selectedDocuments,
+        onProgress: (progress, index) {
+          setState(() {
+            _uploadProgress = (index + progress) / _selectedDocuments.length;
+          });
+        },
+      );
 
-    bool success = await disputeProvider.updateDisputeDocuments(disputeId, documentUrls);
+      // Update dispute with document urls
+      dispute = dispute.copyWith(
+        id: disputeId,
+        documentIds: documentUrls,
+      );
+
+      await disputeProvider.updateDisputeDocuments(disputeId, documentUrls);
+    }
 
     if (!mounted) return;
     Navigator.of(context).pop(); // Hide loading
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Dispute submitted successfully'),
-          backgroundColor: AppColors.successColor,
-        ),
-      );
-      Navigator.pop(context); // Go back
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(disputeProvider.errorMessage ?? 'Failed to submit dispute'),
-          backgroundColor: AppColors.errorColor,
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Dispute submitted successfully'),
+        backgroundColor: AppColors.successColor,
+      ),
+    );
+    Navigator.pop(context); // Go back
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Report Dispute'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Report Dispute',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
               CustomTextField(
                 controller: _titleController,
                 label: 'Dispute Title',
@@ -213,7 +198,7 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<DisputeType>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Dispute Type',
                   border: OutlineInputBorder(),
@@ -232,7 +217,7 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<DisputePriority>(
-                value: _selectedPriority,
+                initialValue: _selectedPriority,
                 decoration: const InputDecoration(
                   labelText: 'Priority',
                   border: OutlineInputBorder(),
@@ -265,9 +250,9 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
                ),
                const SizedBox(height: 16),
                
-               // Document Upload Section
+               // Document Upload Section - ✅ NOW OPTIONAL
                const Text(
-                 'Supporting Documents *',
+                 'Supporting Documents (Optional)',
                  style: TextStyle(
                    fontSize: 16,
                    fontWeight: FontWeight.bold,
@@ -275,7 +260,7 @@ class _ReportDisputeScreenState extends State<ReportDisputeScreen> {
                ),
                const SizedBox(height: 8),
                const Text(
-                 'Upload land title deeds, survey maps, agreements or any relevant documents',
+                 'You can attach supporting documents (land title deeds, survey maps, agreements or any relevant documents)',
                  style: TextStyle(color: AppColors.textLight, fontSize: 12),
                ),
                const SizedBox(height: 12),

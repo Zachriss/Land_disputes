@@ -5,6 +5,7 @@ import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/dispute_provider.dart';
 import 'routes/app_routes.dart';
+import 'screens/landing_screen.dart';
 import 'screens/auth/login_screen.dart';
 
 class MyApp extends StatelessWidget {
@@ -50,9 +51,9 @@ class MyApp extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
-        initialRoute: AppRoutes.login,
+        initialRoute: AppRoutes.landing,
         onGenerateRoute: AppRoutes.generateRoute,
-        home: const LoginScreen(),
+        home: const LandingScreen(),
       ),
     );
   }

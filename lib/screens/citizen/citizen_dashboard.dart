@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/dispute_provider.dart';
 import '../../models/dispute_model.dart';
 import '../../models/user_model.dart';
 import '../../constants/colors.dart';
 import '../../constants/strings.dart';
+import '../../constants/firebase_consts.dart';
 import '../../widgets/dispute_card.dart';
 import '../../widgets/app_drawer.dart';
 import '../auth/login_screen.dart';
@@ -13,6 +16,8 @@ import 'report_dispute_screen.dart';
 import 'my_cases_screen.dart';
 import 'notifications_screen.dart';
 import 'citizen_profile_screen.dart';
+import 'view_notices_screen.dart';
+import 'view_meetings_screen.dart';
 
 class CitizenDashboard extends StatefulWidget {
   const CitizenDashboard({super.key});
@@ -23,12 +28,15 @@ class CitizenDashboard extends StatefulWidget {
 
 class _CitizenDashboardState extends State<CitizenDashboard> {
   int _currentIndex = 0;
+  int _unreadNotificationsCount = 0;
+  StreamSubscription? _notificationsSubscription;
   
   final List<Widget> _screens = [
     const _DashboardHome(),
     const MyCasesScreen(),
-    const NotificationsScreen(),
-    const CitizenProfileScreen(),
+    const ReportDisputeScreen(),
+    const ViewMeetingsScreen(),
+    const ViewNoticesScreen(),
   ];
 
   @override
@@ -37,6 +45,7 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
     // Delay data loading until after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadDisputes();
+      _setupUnreadNotificationsListener();
     });
   }
 
@@ -46,6 +55,32 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
     if (authProvider.userUid != null) {
       disputeProvider.loadDisputesByUser(authProvider.userUid!);
     }
+  }
+
+  void _setupUnreadNotificationsListener() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userId = authProvider.userUid;
+    
+    if (userId == null) return;
+    
+    _notificationsSubscription = FirebaseFirestore.instance
+        .collection(FirebaseConsts.notificationsCollection)
+        .where('userId', isEqualTo: userId)
+        .where('read', isEqualTo: false)
+        .snapshots()
+        .listen((snapshot) {
+          if (mounted) {
+            setState(() {
+              _unreadNotificationsCount = snapshot.docs.length;
+            });
+          }
+        });
+  }
+
+  @override
+  void dispose() {
+    _notificationsSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -58,7 +93,8 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           ? AppDrawer(currentUser: currentUser, currentPage: 'dashboard') 
           : null,
       appBar: AppBar(
-        title: const Text(AppStrings.appName),
+        title: const Text('Citizen'),
+        toolbarHeight: 56,
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -67,29 +103,81 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           ),
         ),
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
+                },
+              ),
+              if (_unreadNotificationsCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Text(
+                      _unreadNotificationsCount > 99 ? '99+' : _unreadNotificationsCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _handleLogout(context),
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CitizenProfileScreen()));
+            },
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CitizenProfileScreen()));
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.white,
+                child: currentUser?.profilePictureUrl != null && currentUser!.profilePictureUrl!.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          currentUser!.profilePictureUrl!,
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Text(
+                        currentUser?.fullName.isNotEmpty == true
+                            ? currentUser!.fullName[0].toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+              ),
+            ),
           ),
         ],
       ),
       body: _screens[_currentIndex],
-      floatingActionButton: _currentIndex == 0
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ReportDisputeScreen(),
-                  ),
-                );
-              },
-              backgroundColor: AppColors.primaryColor,
-              elevation: 6,
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomAppBar(
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
@@ -97,22 +185,26 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           selectedItemColor: AppColors.primaryColor,
           unselectedItemColor: AppColors.textLight,
           type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
+          items: [
+            const BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: AppStrings.dashboard,
+              label: 'Home',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.folder),
               label: AppStrings.myCases,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications),
-              label: 'Notifications',
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline),
+              label: 'Report Dispute',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.event),
+              label: 'Meetings',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.announcement),
+              label: 'Notices',
             ),
           ],
         ),
@@ -161,18 +253,15 @@ class _DashboardHome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome message
-          Text(
-            'Welcome, ${authProvider.currentUser?.fullName ?? "User"}!',
-            style: const TextStyle(
-              fontSize: 24,
+          const Text(
+            'Citizen Overview',
+            style: TextStyle(
+              fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 24),
-
-          // Stats Grid
-           GridView.count(
+          GridView.count(
              shrinkWrap: true,
              physics: const NeverScrollableScrollPhysics(),
              crossAxisCount: 2,

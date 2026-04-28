@@ -6,16 +6,16 @@ import '../../providers/auth_provider.dart';
 import '../../constants/colors.dart';
 import '../../constants/firebase_consts.dart';
 import '../../services/notification_service.dart';
-import 'notification_details_screen.dart';
+import '../citizen/notification_details_screen.dart';
 
-class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+class MediatorNotificationsScreen extends StatefulWidget {
+  const MediatorNotificationsScreen({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
+  State<MediatorNotificationsScreen> createState() => _MediatorNotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
+class _MediatorNotificationsScreenState extends State<MediatorNotificationsScreen> {
   final NotificationService _notificationService = NotificationService();
   List<QueryDocumentSnapshot> _notifications = [];
   bool _isInitialLoading = true;
@@ -197,8 +197,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return const Icon(Icons.update, color: AppColors.infoColor);
       case 'resolved':
         return const Icon(Icons.check_circle, color: AppColors.successColor);
-      case 'mediator_assigned':
+      case 'mediator_assignment':
         return const Icon(Icons.person, color: AppColors.primaryColor);
+      case 'mediator_assigned':
+        return const Icon(Icons.assignment_turned_in, color: AppColors.primaryColor);
       case 'rejected':
         return const Icon(Icons.cancel, color: AppColors.errorColor);
       default:

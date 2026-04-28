@@ -37,62 +37,79 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Disputes'),
-        backgroundColor: AppColors.primaryColor,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDisputes,
-            tooltip: 'Refresh',
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
-            tooltip: 'Sort',
-            onSelected: (value) {
-              setState(() {
-                if (_sortBy == value) {
-                  _isAscending = !_isAscending;
-                } else {
-                  _sortBy = value;
-                  _isAscending = false;
-                }
-              });
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'date',
-                child: ListTile(
-                  leading: Icon(Icons.calendar_today),
-                  title: Text('Sort by Date'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'status',
-                child: ListTile(
-                  leading: Icon(Icons.label),
-                  title: Text('Sort by Status'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'title',
-                child: ListTile(
-                  leading: Icon(Icons.title),
-                  title: Text('Sort by Title'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-        ],
+        toolbarHeight: kToolbarHeight,
       ),
       body: Column(
         children: [
+          // Page Title & Actions
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'All Disputes',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _loadDisputes,
+                      tooltip: 'Refresh',
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.sort),
+                      tooltip: 'Sort',
+                      onSelected: (value) {
+                        setState(() {
+                          if (_sortBy == value) {
+                            _isAscending = !_isAscending;
+                          } else {
+                            _sortBy = value;
+                            _isAscending = false;
+                          }
+                        });
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'date',
+                          child: ListTile(
+                            leading: Icon(Icons.calendar_today),
+                            title: Text('Sort by Date'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'status',
+                          child: ListTile(
+                            leading: Icon(Icons.label),
+                            title: Text('Sort by Status'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'title',
+                          child: ListTile(
+                            leading: Icon(Icons.title),
+                            title: Text('Sort by Title'),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           // Search and filter section
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
                 // Search field
@@ -142,7 +159,7 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
                             checkmarkColor: _getStatusColor(status),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),
@@ -178,9 +195,9 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
                 // Apply search filter - adjust these fields based on your DisputeModel
                 if (_searchQuery.isNotEmpty) {
                   disputes = disputes.where((d) =>
-                      (d.title?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                      (d.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                      (d.location?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                      (d.title.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                      (d.description.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                      (d.location.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
                       (d.id?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)
                   ).toList();
                 }
@@ -243,9 +260,9 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showFilterDialog(),
-        child: const Icon(Icons.filter_list),
         backgroundColor: AppColors.primaryColor,
         tooltip: 'Advanced Filters',
+        child: const Icon(Icons.filter_list),
       ),
     );
   }
@@ -286,8 +303,7 @@ class _AllDisputesScreenState extends State<AllDisputesScreen> {
               const SizedBox(height: 8),
               _buildDetailRow('Description', dispute.description ?? 'No description'),
               const SizedBox(height: 8),
-              if (dispute.location != null)
-                _buildDetailRow('Location', dispute.location!),
+              _buildDetailRow('Location', dispute.location),
               const SizedBox(height: 8),
               _buildDetailRow('Created', _formatDate(dispute.createdAt)),
             ],
@@ -472,31 +488,29 @@ class _DisputeListItem extends StatelessWidget {
               const SizedBox(height: 12),
               
               // Description
-              if (dispute.description != null)
-                Text(
-                  dispute.description!,
-                  style: const TextStyle(fontSize: 14),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                dispute.description,
+                style: const TextStyle(fontSize: 14),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               const SizedBox(height: 8),
               
               // Location if available
-              if (dispute.location != null)
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 16, color: AppColors.textLight),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        dispute.location!,
-                        style: const TextStyle(fontSize: 14),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              Row(
+                children: [
+                  const Icon(Icons.location_on, size: 16, color: AppColors.textLight),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      dispute.location,
+                      style: const TextStyle(fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               
               // Date

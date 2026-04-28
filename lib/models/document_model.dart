@@ -1,4 +1,5 @@
 /// Document model for the Land Disputes Management System
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 

@@ -4,7 +4,6 @@ import '../../providers/dispute_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/dispute_model.dart';
 import '../../models/user_model.dart';
-import '../../widgets/dispute_card.dart';
 import '../../constants/colors.dart';
 
 class AssignMediatorScreen extends StatefulWidget {
@@ -110,7 +109,7 @@ class _AssignMediatorScreenState extends State<AssignMediatorScreen> {
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    bool success = await disputeProvider.assignMediator(dispute.id!, mediator.id!);
+    bool success = await disputeProvider.assignMediator(dispute.id!, mediator.id!, mediator.fullName);
 
     if (!mounted) return;
     Navigator.pop(context); // close loading dialog

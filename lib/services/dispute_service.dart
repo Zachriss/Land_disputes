@@ -1,8 +1,8 @@
 /// Dispute service for managing disputes in Firestore
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dispute_model.dart';
-import '../models/user_model.dart';
 import '../constants/firebase_consts.dart';
 import 'notification_service.dart';
 
@@ -17,9 +17,12 @@ class DisputeService {
           .collection(FirebaseConsts.disputesCollection)
           .doc(disputeId)
           .get();
-      
+
       if (doc.exists) {
-        return DisputeModel.fromJson(disputeId, doc.data() as Map<String, dynamic>);
+        return DisputeModel.fromJson(
+          disputeId,
+          doc.data() as Map<String, dynamic>,
+        );
       }
       return null;
     } catch (e) {
@@ -34,9 +37,12 @@ class DisputeService {
           .collection(FirebaseConsts.disputesCollection)
           .orderBy(FirebaseConsts.defaultOrderBy, descending: true)
           .get();
-      
+
       return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+        return DisputeModel.fromJson(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+        );
       }).toList();
     } catch (e) {
       throw 'Failed to get disputes: $e';
@@ -51,9 +57,12 @@ class DisputeService {
           .where('status', isEqualTo: _statusToString(status))
           .orderBy(FirebaseConsts.defaultOrderBy, descending: true)
           .get();
-      
+
       return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+        return DisputeModel.fromJson(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+        );
       }).toList();
     } catch (e) {
       throw 'Failed to get disputes by status: $e';
@@ -61,16 +70,21 @@ class DisputeService {
   }
 
   // Get disputes by priority
-  Future<List<DisputeModel>> getDisputesByPriority(DisputePriority priority) async {
+  Future<List<DisputeModel>> getDisputesByPriority(
+    DisputePriority priority,
+  ) async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection(FirebaseConsts.disputesCollection)
           .where('priority', isEqualTo: _priorityToString(priority))
           .orderBy(FirebaseConsts.defaultOrderBy, descending: true)
           .get();
-      
+
       return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+        return DisputeModel.fromJson(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+        );
       }).toList();
     } catch (e) {
       throw 'Failed to get disputes by priority: $e';
@@ -83,12 +97,25 @@ class DisputeService {
       QuerySnapshot snapshot = await _firestore
           .collection(FirebaseConsts.disputesCollection)
           .where('submittedBy', isEqualTo: userId)
-          .orderBy(FirebaseConsts.defaultOrderBy, descending: true)
           .get();
-      
-      return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+
+      final disputes = snapshot.docs.map((doc) {
+        return DisputeModel.fromJson(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+        );
       }).toList();
+
+      // ✅ Stable client-side sorting (avoids Firestore composite index requirement)
+      disputes.sort((a, b) {
+        final aTime = a.createdAt;
+        final bTime = b.createdAt;
+
+        if (aTime == null && bTime == null) return 0;
+        return bTime.compareTo(aTime);
+      });
+
+      return disputes;
     } catch (e) {
       throw 'Failed to get disputes by user: $e';
     }
@@ -102,9 +129,12 @@ class DisputeService {
           .where('assignedOfficerId', isEqualTo: officerId)
           .orderBy(FirebaseConsts.defaultOrderBy, descending: true)
           .get();
-      
+
       return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+        return DisputeModel.fromJson(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+        );
       }).toList();
     } catch (e) {
       throw 'Failed to get disputes by officer: $e';
@@ -114,16 +144,35 @@ class DisputeService {
   // Get disputes assigned to mediator
   Future<List<DisputeModel>> getDisputesByMediator(String mediatorId) async {
     try {
+      print('🔍 [DisputeService] Querying disputes for mediator: $mediatorId');
+      
+      // ✅ NO COMPOSITE INDEX REQUIRED - 100% WORKS EVERYWHERE
       QuerySnapshot snapshot = await _firestore
           .collection(FirebaseConsts.disputesCollection)
           .where('assignedMediatorId', isEqualTo: mediatorId)
-          .orderBy(FirebaseConsts.defaultOrderBy, descending: true)
           .get();
       
-      return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
+      print('✅ [DisputeService] Found ${snapshot.docs.length} assigned disputes');
+      
+      // ✅ Client side sorting (no Firestore index needed)
+      final disputes = snapshot.docs.map((doc) {
+        return DisputeModel.fromJson(
+          doc.id,
+          doc.data() as Map<String, dynamic>,
+        );
       }).toList();
+      
+      // Sort by created date descending (newest first)
+      disputes.sort((a, b) {
+        final aTime = a.createdAt;
+        final bTime = b.createdAt;
+        if (aTime == null && bTime == null) return 0;
+        return bTime.compareTo(aTime);
+      });
+      
+      return disputes;
     } catch (e) {
+      print('❌ [DisputeService] Query failed: $e');
       throw 'Failed to get disputes by mediator: $e';
     }
   }
@@ -141,33 +190,36 @@ class DisputeService {
   }
 
   // Update dispute
-  Future<void> updateDispute(String disputeId, Map<String, dynamic> data) async {
+  Future<void> updateDispute(
+    String disputeId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       await _firestore
           .collection(FirebaseConsts.disputesCollection)
           .doc(disputeId)
-          .update({
-            ...data,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          .update({...data, 'updatedAt': FieldValue.serverTimestamp()});
     } catch (e) {
       throw 'Failed to update dispute: $e';
     }
   }
 
   // Update dispute status
-  Future<void> updateDisputeStatus(String disputeId, DisputeStatus status) async {
+  Future<void> updateDisputeStatus(
+    String disputeId,
+    DisputeStatus status,
+  ) async {
     try {
       Map<String, dynamic> data = {
         'status': _statusToString(status),
         'updatedAt': FieldValue.serverTimestamp(),
       };
-      
+
       // Set resolvedAt if status is resolved or closed
       if (status == DisputeStatus.resolved || status == DisputeStatus.closed) {
         data['resolvedAt'] = FieldValue.serverTimestamp();
       }
-      
+
       await _firestore
           .collection(FirebaseConsts.disputesCollection)
           .doc(disputeId)
@@ -178,14 +230,20 @@ class DisputeService {
           .collection(FirebaseConsts.disputesCollection)
           .doc(disputeId)
           .get();
-      
+
       if (disputeDoc.exists) {
-        final dispute = DisputeModel.fromJson(disputeId, disputeDoc.data() as Map<String, dynamic>);
+        final dispute = DisputeModel.fromJson(
+          disputeId,
+          disputeDoc.data() as Map<String, dynamic>,
+        );
         final statusString = _statusToString(status);
-        
+
         // Send status update notification
-        await _notificationService.sendDisputeStatusUpdateNotification(dispute, statusString);
-        
+        await _notificationService.sendDisputeStatusUpdateNotification(
+          dispute,
+          statusString,
+        );
+
         // Send resolved notification if applicable
         if (status == DisputeStatus.resolved) {
           await _notificationService.sendDisputeResolvedNotification(dispute);
@@ -212,15 +270,35 @@ class DisputeService {
   }
 
   // Assign mediator to dispute
-  Future<void> assignMediator(String disputeId, String? mediatorId) async {
+  Future<void> assignMediator(String disputeId, String? mediatorId, [String mediatorName = '']) async {
     try {
+      // Update dispute document with assignment
       await _firestore
           .collection(FirebaseConsts.disputesCollection)
           .doc(disputeId)
           .update({
-            'assignedMediatorId': mediatorId,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+        'assignedMediatorId': mediatorId,
+        if (mediatorName.isNotEmpty) 'assignedMediatorName': mediatorName,
+        if (mediatorId != null) 'assignedAt': FieldValue.serverTimestamp(),
+        if (mediatorId != null) 'status': 'inProgress',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // ✅ Send notification to mediator
+      if (mediatorId != null) {
+        await _firestore.collection('notifications').add({
+          'userId': mediatorId,
+          'title': 'New Case Assigned',
+          'body': 'You have been assigned a new land dispute case.',
+          'type': 'mediator_assignment',
+          'disputeId': disputeId,
+          'read': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        print('🔔 [DisputeService] Notification sent to mediator $mediatorId');
+      }
+
     } catch (e) {
       throw 'Failed to assign mediator: $e';
     }
@@ -245,40 +323,55 @@ class DisputeService {
         .orderBy(FirebaseConsts.defaultOrderBy, descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return DisputeModel.fromJson(doc.id, doc.data() as Map<String, dynamic>);
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            return DisputeModel.fromJson(doc.id, doc.data());
+          }).toList();
+        });
   }
 
   // Helper methods
   String _statusToString(DisputeStatus status) {
     switch (status) {
-      case DisputeStatus.pending: return 'pending';
-      case DisputeStatus.inProgress: return 'in_progress';
-      case DisputeStatus.resolved: return 'resolved';
-      case DisputeStatus.rejected: return 'rejected';
-      case DisputeStatus.onHold: return 'on_hold';
-      case DisputeStatus.closed: return 'closed';
+      case DisputeStatus.pending:
+        return 'pending';
+      case DisputeStatus.inProgress:
+        return 'in_progress';
+      case DisputeStatus.resolved:
+        return 'resolved';
+      case DisputeStatus.rejected:
+        return 'rejected';
+      case DisputeStatus.onHold:
+        return 'on_hold';
+      case DisputeStatus.closed:
+        return 'closed';
     }
   }
 
   String _priorityToString(DisputePriority priority) {
     switch (priority) {
-      case DisputePriority.low: return 'low';
-      case DisputePriority.medium: return 'medium';
-      case DisputePriority.high: return 'high';
-      case DisputePriority.urgent: return 'urgent';
+      case DisputePriority.low:
+        return 'low';
+      case DisputePriority.medium:
+        return 'medium';
+      case DisputePriority.high:
+        return 'high';
+      case DisputePriority.urgent:
+        return 'urgent';
     }
   }
 
   String _typeToString(DisputeType type) {
     switch (type) {
-      case DisputeType.boundary: return 'boundary';
-      case DisputeType.ownership: return 'ownership';
-      case DisputeType.inheritance: return 'inheritance';
-      case DisputeType.lease: return 'lease';
-      case DisputeType.other: return 'other';
+      case DisputeType.boundary:
+        return 'boundary';
+      case DisputeType.ownership:
+        return 'ownership';
+      case DisputeType.inheritance:
+        return 'inheritance';
+      case DisputeType.lease:
+        return 'lease';
+      case DisputeType.other:
+        return 'other';
     }
   }
 }

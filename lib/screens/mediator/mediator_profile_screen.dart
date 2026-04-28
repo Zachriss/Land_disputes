@@ -14,14 +14,14 @@ import '../../services/cloudinary_service.dart';
 import '../../widgets/custom_button.dart';
 import '../auth/login_screen.dart';
 
-class CitizenProfileScreen extends StatefulWidget {
-  const CitizenProfileScreen({super.key});
+class MediatorProfileScreen extends StatefulWidget {
+  const MediatorProfileScreen({super.key});
 
   @override
-  State<CitizenProfileScreen> createState() => _CitizenProfileScreenState();
+  State<MediatorProfileScreen> createState() => _MediatorProfileScreenState();
 }
 
-class _CitizenProfileScreenState extends State<CitizenProfileScreen> {
+class _MediatorProfileScreenState extends State<MediatorProfileScreen> {
   final StorageService _storageService = StorageService();
   bool _isUploading = false;
 
@@ -182,7 +182,7 @@ class _CitizenProfileScreenState extends State<CitizenProfileScreen> {
 
       if (imageUrl != null) {
         await FirebaseFirestore.instance
-            .collection('users')
+            .collection(FirebaseConsts.usersCollection)
             .doc(authProvider.userUid!)
             .update({
           'profilePictureUrl': imageUrl,

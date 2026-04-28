@@ -1,4 +1,5 @@
 /// Notification Service for sending push notifications to users
+library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dispute_model.dart';
 import '../models/user_model.dart';
@@ -36,9 +37,9 @@ class NotificationService {
   Future<void> sendDisputeStatusUpdateNotification(DisputeModel dispute, String newStatus) async {
     try {
       // Send to Citizen who submitted the dispute
-      if (dispute.submittedBy != null && dispute.submittedBy!.isNotEmpty) {
+      if (dispute.submittedBy.isNotEmpty) {
         await sendNotification(
-          userId: dispute.submittedBy!,
+          userId: dispute.submittedBy,
           title: 'Dispute Status Updated',
           body: 'Your dispute "${dispute.title}" has been updated to status: $newStatus',
           disputeId: dispute.id!,
@@ -65,9 +66,9 @@ class NotificationService {
   Future<void> sendDisputeResolvedNotification(DisputeModel dispute) async {
     try {
       // Send to Citizen
-      if (dispute.submittedBy != null && dispute.submittedBy!.isNotEmpty) {
+      if (dispute.submittedBy.isNotEmpty) {
         await sendNotification(
-          userId: dispute.submittedBy!,
+          userId: dispute.submittedBy,
           title: 'Dispute Resolved',
           body: 'Great news! Your dispute "${dispute.title}" has been resolved.',
           disputeId: dispute.id!,
@@ -94,9 +95,9 @@ class NotificationService {
   Future<void> sendMediatorAssignedNotification(DisputeModel dispute, UserModel mediator) async {
     try {
       // Send to Citizen
-      if (dispute.submittedBy != null && dispute.submittedBy!.isNotEmpty) {
+      if (dispute.submittedBy.isNotEmpty) {
         await sendNotification(
-          userId: dispute.submittedBy!,
+          userId: dispute.submittedBy,
           title: 'Mediator Assigned',
           body: 'Mediator ${mediator.fullName} has been assigned to your dispute "${dispute.title}"',
           disputeId: dispute.id!,

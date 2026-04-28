@@ -1,4 +1,5 @@
 /// User service for managing user data in Firestore
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
@@ -146,7 +147,7 @@ class UserService {
       QuerySnapshot snapshot = await _firestore
           .collection(FirebaseConsts.usersCollection)
           .where('fullName', isGreaterThanOrEqualTo: query)
-          .where('fullName', isLessThanOrEqualTo: query + '\uf8ff')
+          .where('fullName', isLessThanOrEqualTo: '$query\uf8ff')
           .get();
       
       return snapshot.docs.map((doc) {

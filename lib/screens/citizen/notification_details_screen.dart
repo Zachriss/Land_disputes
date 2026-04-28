@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../constants/colors.dart';
-import '../../constants/firebase_consts.dart';
 import '../../services/notification_service.dart';
 
 class NotificationDetailsScreen extends StatefulWidget {
@@ -20,28 +19,11 @@ class NotificationDetailsScreen extends StatefulWidget {
 
 class _NotificationDetailsScreenState extends State<NotificationDetailsScreen> {
   final NotificationService _notificationService = NotificationService();
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _markAsRead();
-  }
-
-  Future<void> _markAsRead() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      await widget.notification.reference.update({'read': true});
-    } catch (e) {
-      debugPrint('Failed to mark notification as read: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   @override
@@ -57,9 +39,7 @@ class _NotificationDetailsScreenState extends State<NotificationDetailsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
+      body: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

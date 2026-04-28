@@ -216,7 +216,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Role
                 DropdownButtonFormField<UserRole>(
-                  value: _selectedRole,
+                  initialValue: _selectedRole,
                   decoration: const InputDecoration(
                     labelText: AppStrings.role,
                     border: OutlineInputBorder(),
@@ -236,6 +236,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomButton(
                   text: AppStrings.register,
                   onPressed: _handleRegister,
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Have an account? ",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Text(
+                        AppStrings.login,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

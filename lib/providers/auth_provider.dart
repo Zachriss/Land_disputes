@@ -168,6 +168,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// ✅ Update current user in provider state
+  void setCurrentUser(UserModel user) {
+    _currentUser = user;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _authStateSubscription?.cancel();

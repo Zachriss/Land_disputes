@@ -180,7 +180,7 @@ class _DisputeDetailsScreenState extends State<DisputeDetailsScreen> {
                         onVerifyValid: () => _verifyDocument(document, true),
                         onVerifyInvalid: () => _verifyDocument(document, false),
                       );
-                      }).toList(),
+                      }),
                   ],
                 ),
               ),

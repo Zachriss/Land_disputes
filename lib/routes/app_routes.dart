@@ -1,4 +1,5 @@
 /// Named routes and route generator for the app
+library;
 
 import 'package:flutter/material.dart';
 import '../screens/auth/login_screen.dart';
@@ -20,10 +21,12 @@ import '../screens/admin/assign_roles_screen.dart';
 import '../screens/admin/activity_logs_screen.dart';
 import '../screens/admin/system_settings_screen.dart';
 import '../screens/admin/admin_profile_screen.dart';
+import '../screens/landing_screen.dart';
 import '../screens/admin/admin_settings_screen.dart';
 
 class AppRoutes {
   // Route names
+  static const String landing = '/';
   static const String login = '/login';
   static const String register = '/register';
 
@@ -56,6 +59,8 @@ class AppRoutes {
   // Route generator
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case landing:
+        return MaterialPageRoute(builder: (_) => const LandingScreen());
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case register:

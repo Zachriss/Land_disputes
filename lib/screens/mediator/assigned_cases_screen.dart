@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/dispute_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../models/dispute_model.dart';
 import '../../widgets/dispute_card.dart';
 
@@ -13,6 +14,22 @@ class AssignedCasesScreen extends StatefulWidget {
 
 class _AssignedCasesScreenState extends State<AssignedCasesScreen> {
   DisputeStatus? _filterStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAssignedCases();
+    });
+  }
+
+  Future<void> _loadAssignedCases() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.userUid != null) {
+      await Provider.of<DisputeProvider>(context, listen: false)
+          .loadDisputesByMediator(authProvider.userUid!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +68,7 @@ class _AssignedCasesScreenState extends State<AssignedCasesScreen> {
                         },
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
@@ -141,10 +158,7 @@ class _AssignedCasesScreenState extends State<AssignedCasesScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      // Navigate to status update
-                    },
+                    onPressed: () => _showStatusUpdateDialog(context, dispute),
                     icon: const Icon(Icons.update),
                     label: const Text('Update Status'),
                   ),
@@ -204,5 +218,75 @@ class _AssignedCasesScreenState extends State<AssignedCasesScreen> {
       case DisputeType.lease: return 'Lease';
       case DisputeType.other: return 'Other';
     }
+  }
+
+  void _showStatusUpdateDialog(BuildContext context, DisputeModel dispute) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        DisputeStatus? selectedStatus = dispute.status;
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Update Case Status'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...[
+                    DisputeStatus.inProgress,
+                    DisputeStatus.onHold,
+                    DisputeStatus.resolved,
+                    DisputeStatus.closed,
+                  ].map((status) {
+                    return RadioListTile<DisputeStatus>(
+                      title: Text(_statusToLabel(status)),
+                      value: status,
+                      groupValue: selectedStatus,
+                      onChanged: (value) {
+                        setState(() => selectedStatus = value);
+                      },
+                    );
+                  }),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (selectedStatus == null) return;
+                    
+                    Navigator.pop(context);
+                    Navigator.pop(context); // Close details sheet
+                    
+                    final disputeProvider = Provider.of<DisputeProvider>(context, listen: false);
+                    
+                    await disputeProvider.updateDisputeStatus(
+                      dispute.id!,
+                      selectedStatus!,
+                    );
+                    
+                    // Refresh assigned cases
+                    await _loadAssignedCases();
+                    
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('✅ Status updated successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: const Text('Update Status'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

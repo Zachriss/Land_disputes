@@ -1,4 +1,5 @@
 /// Firebase collection names and constants
+library;
 
 class FirebaseConsts {
   // Collections

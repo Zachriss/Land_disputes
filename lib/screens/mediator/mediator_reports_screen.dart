@@ -4,8 +4,8 @@ import '../../providers/dispute_provider.dart';
 import '../../models/dispute_model.dart';
 import '../../constants/colors.dart';
 
-class ReportsAnalyticsScreen extends StatelessWidget {
-  const ReportsAnalyticsScreen({super.key});
+class MediatorReportsScreen extends StatelessWidget {
+  const MediatorReportsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,14 +15,8 @@ class ReportsAnalyticsScreen extends StatelessWidget {
     final pendingCases = disputeProvider.disputes.where((d) => d.status == DisputeStatus.pending).length;
     final inProgressCases = disputeProvider.disputes.where((d) => d.status == DisputeStatus.inProgress).length;
     final onHoldCases = disputeProvider.disputes.where((d) => d.status == DisputeStatus.onHold).length;
-    final rejectedCases = disputeProvider.disputes.where((d) => d.status == DisputeStatus.rejected).length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reports & Analytics'),
-        centerTitle: true,
-        elevation: 0,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -71,10 +65,10 @@ class ReportsAnalyticsScreen extends StatelessWidget {
                   icon: Icons.hourglass_top,
                 ),
                 _ReportCard(
-                  title: 'Rejected',
-                  count: rejectedCases,
+                  title: 'On Hold',
+                  count: onHoldCases,
                   color: AppColors.errorColor,
-                  icon: Icons.cancel,
+                  icon: Icons.pause_circle,
                 ),
                 _ReportCard(
                   title: 'Resolution Rate',

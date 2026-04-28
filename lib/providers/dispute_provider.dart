@@ -87,13 +87,23 @@ class DisputeProvider extends ChangeNotifier {
   Future<void> loadDisputesByMediator(String mediatorId) async {
     _isLoading = true;
     _errorMessage = null;
+    _disputes = []; // ✅ Clear old cached data before loading new
+    notifyListeners();
+
+    // 🔍 Debug prints
+    print('🔍 [DisputeProvider] Loading disputes for mediator: $mediatorId');
 
     try {
       _disputes = await _disputeService.getDisputesByMediator(mediatorId);
+      print('✅ [DisputeProvider] Loaded ${_disputes.length} disputes for mediator $mediatorId');
+      for (var d in _disputes) {
+        print('   - Dispute: ${d.id} | ${d.title} | Status: ${d.status}');
+      }
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
+      print('❌ [DisputeProvider] Failed to load mediator disputes: $e');
       _isLoading = false;
       notifyListeners();
     }
@@ -220,13 +230,13 @@ class DisputeProvider extends ChangeNotifier {
   }
 
   // Assign mediator to dispute
-  Future<bool> assignMediator(String disputeId, String? mediatorId) async {
+  Future<bool> assignMediator(String disputeId, String? mediatorId, [String mediatorName = '']) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _disputeService.assignMediator(disputeId, mediatorId);
+      await _disputeService.assignMediator(disputeId, mediatorId, mediatorName);
       await loadAllDisputes(); // Refresh disputes
       _isLoading = false;
       notifyListeners();
@@ -315,5 +325,15 @@ class DisputeProvider extends ChangeNotifier {
   void clearSelectedDispute() {
     _selectedDispute = null;
     notifyListeners();
+  }
+
+  // ✅ Clear all dispute data (call on logout)
+  void clearAllData() {
+    _disputes = [];
+    _selectedDispute = null;
+    _errorMessage = null;
+    _isLoading = false;
+    notifyListeners();
+    print('🧹 [DisputeProvider] All dispute data cleared');
   }
 }
